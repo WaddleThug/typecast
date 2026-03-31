@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typecast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814; --ink2: #4a4740; --ink3: #9a9690;
+    --paper: #f5f2ed; --paper2: #ece8e0;
+    --accent: #c8410a; --accent2: #e8956a;
+    --white: #ffffff;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+  nav {
+    padding: 18px 32px; border-bottom: 1px solid rgba(26,24,20,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: rgba(245,242,237,0.95);
+    backdrop-filter: blur(10px); z-index: 10;
+  }
+  .logo { font-family: var(--serif); font-size: 20px; letter-spacing: -0.01em; }
+  .logo em { color: var(--accent); font-style: italic; }
+  .nav-step { font-size: 12px; color: var(--ink3); font-weight: 400; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeUp 0.45s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+  .wrap { max-width: 620px; margin: 0 auto; padding: 60px 32px 80px; }
+
+  /* PROGRESS */
+  .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .progress-label { font-size: 12px; color: var(--ink3); font-weight: 500; }
+  .progress-track { height: 3px; background: var(--paper2); border-radius: 99px; margin-bottom: 48px; }
+  .progress-fill { height: 3px; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; }
+
+  /* INTRO */
+  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .eyebrow::before { content: ''; width: 18px; height: 1px; background: var(--accent); display: block; }
+  .page-h { font-family: var(--serif); font-size: clamp(36px, 6vw, 58px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 24px; }
+  .page-h em { font-style: italic; color: var(--accent); }
+  .problem-box { background: var(--white); border: 1px solid rgba(26,24,20,0.1); border-radius: 4px; padding: 22px 26px; margin-bottom: 28px; }
+  .problem-box p { font-size: 15px; color: var(--ink2); line-height: 1.8; font-weight: 300; margin-bottom: 12px; }
+  .problem-box p:last-child { margin-bottom: 0; }
+  .problem-box strong { color: var(--ink); font-weight: 500; }
+  .hl { background: rgba(200,65,10,0.08); color: var(--accent); border-radius: 2px; padding: 1px 5px; font-weight: 500; }
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 36px; }
+  .diff-card { border-radius: 4px; padding: 14px 16px; font-size: 13px; line-height: 1.6; }
+  .diff-old { background: var(--paper2); border: 1px solid rgba(26,24,20,0.08); color: var(--ink2); }
+  .diff-new { background: var(--ink); color: rgba(255,255,255,0.75); }
+  .diff-lbl { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .diff-old .diff-lbl { color: var(--ink3); }
+  .diff-new .diff-lbl { color: var(--accent2); }
+
+  /* BUTTONS */
+  .btn-primary { width: 100%; background: var(--accent); color: var(--white); border: none; padding: 17px 28px; border-radius: 3px; font-family: var(--sans); font-size: 16px; font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .btn-primary:hover { background: #a83309; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-note { text-align: center; margin-top: 9px; font-size: 12px; color: var(--ink3); }
+
+  /* QUIZ */
+  .q-num { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .q-text { font-family: var(--serif); font-size: clamp(22px, 3.5vw, 30px); line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 32px; }
+  .think-hint { background: var(--paper2); border: 1.5px dashed rgba(26,24,20,0.18); border-radius: 4px; padding: 18px 22px; font-size: 14px; color: var(--ink3); text-align: center; line-height: 1.6; margin-bottom: 14px; }
+  .think-hint span { display: block; font-size: 18px; margin-bottom: 4px; }
+  .btn-reveal { width: 100%; background: var(--white); color: var(--ink); border: 1px solid rgba(26,24,20,0.18); padding: 14px 22px; border-radius: 3px; font-family: var(--sans); font-size: 15px; cursor: pointer; transition: all 0.18s; }
+  .btn-reveal:hover { border-color: var(--ink); background: var(--paper2); }
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice-btn { background: var(--white); border: 1px solid rgba(26,24,20,0.12); border-radius: 4px; padding: 16px 20px; font-family: var(--sans); font-size: 15px; color: var(--ink2); cursor: pointer; text-align: left; line-height: 1.6; transition: all 0.15s; font-weight: 300; }
+  .choice-btn:hover { border-color: var(--accent); color: var(--ink); }
+  .choice-lbl { font-size: 10px; font-weight: 500; color: var(--ink3); display: block; margin-bottom: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* TYPE RESULT */
+  .type-reveal { text-align: center; margin-bottom: 40px; }
+  .type-big { font-family: var(--serif); font-size: 88px; letter-spacing: -0.03em; line-height: 1; color: var(--ink); margin-bottom: 6px; }
+  .type-name-en { font-size: 15px; color: var(--ink3); font-weight: 300; margin-bottom: 20px; }
+  .func-chips { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .fchip { font-size: 12px; font-weight: 500; padding: 4px 13px; border-radius: 99px; letter-spacing: 0.04em; }
+  .fdom { background: var(--ink); color: var(--white); }
+  .faux { background: var(--paper2); color: var(--ink); }
+  .fter { background: var(--paper2); color: var(--ink3); font-weight: 400; }
+  .finf { background: var(--paper2); color: rgba(26,24,20,0.3); font-weight: 400; }
+  .stack-lbl { font-size: 11px; color: var(--ink3); text-align: center; margin-bottom: 28px; }
+  .bars { margin-bottom: 36px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .bar-name { width: 26px; font-size: 12px; font-weight: 500; color: var(--ink); text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--paper2); border-radius: 99px; height: 7px; }
+  .bar-fill { height: 7px; border-radius: 99px; transition: width 1s ease; }
+  .bar-on { background: var(--accent); }
+  .bar-off { background: rgba(26,24,20,0.1); }
+  .bar-sc { font-size: 11px; color: var(--ink3); width: 18px; text-align: right; }
+
+  /* TRANSITION TO DEEP */
+  .transition-box { background: var(--ink); border-radius: 6px; padding: 28px 28px; margin-bottom: 0; }
+  .transition-box .tb-eye { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 10px; }
+  .transition-box .tb-h { font-family: var(--serif); font-size: 22px; color: var(--white); line-height: 1.25; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .transition-box .tb-sub { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 300; line-height: 1.7; margin-bottom: 20px; }
+  .btn-continue { width: 100%; background: var(--accent); color: var(--white); border: none; padding: 15px 24px; border-radius: 3px; font-family: var(--sans); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .btn-continue:hover { background: #a83309; }
+  .qa-box { margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+  .qa-q { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0 0; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 300; line-height: 1.5; user-select: none; }
+  .qa-q:hover { color: rgba(255,255,255,0.75); }
+  .qa-arrow { flex-shrink: 0; color: rgba(255,255,255,0.35); transition: transform 0.2s; }
+  .qa-arrow.open { transform: rotate(180deg); }
+  .qa-a { display: none; padding: 10px 0 0; font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 300; line-height: 1.75; }
+
+  /* DEEP ASSESSMENT */
+  .assess-step { display: none; }
+  .assess-step.active { display: block; animation: fadeUp 0.4s ease both; }
+  .assess-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .assess-eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--accent); display: block; }
+  .assess-h { font-family: var(--serif); font-size: clamp(26px, 4vw, 38px); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .assess-sub { font-size: 14px; color: var(--ink2); font-weight: 300; line-height: 1.7; margin-bottom: 28px; }
+  .assess-why { background: var(--paper2); border-radius: 3px; padding: 12px 16px; font-size: 13px; color: var(--ink3); line-height: 1.6; margin-bottom: 28px; font-style: italic; font-weight: 300; }
+  .checkbox-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+  .cb-item { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 13px 16px; background: var(--white); border: 1px solid rgba(26,24,20,0.1); border-radius: 4px; transition: all 0.15s; user-select: none; }
+  .cb-item:hover { border-color: rgba(200,65,10,0.3); }
+  .cb-item.checked { border-color: var(--accent); background: rgba(200,65,10,0.04); }
+  .cb-box { width: 18px; height: 18px; border-radius: 3px; border: 1.5px solid rgba(26,24,20,0.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--white); }
+  .cb-item.checked .cb-box { background: var(--accent); border-color: var(--accent); }
+  .cb-check { display: none; }
+  .cb-item.checked .cb-check { display: block; }
+  .cb-text { font-size: 14px; color: var(--ink2); font-weight: 300; line-height: 1.4; }
+  .cb-item.checked .cb-text { color: var(--ink); }
+  .cb-custom { margin-top: 4px; }
+  .custom-input { width: 100%; padding: 11px 14px; border: 1px solid rgba(26,24,20,0.15); border-radius: 3px; background: var(--white); font-family: var(--sans); font-size: 14px; color: var(--ink); font-weight: 300; outline: none; transition: border-color 0.15s; }
+  .custom-input::placeholder { color: var(--ink3); }
+  .custom-input:focus { border-color: var(--ink); }
+  .assess-nav { display: flex; gap: 10px; align-items: center; }
+  .btn-next { flex: 1; background: var(--ink); color: var(--white); border: none; padding: 15px 24px; border-radius: 3px; font-family: var(--sans); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .btn-next:hover { background: #2d2a26; }
+  .btn-back-sm { background: none; border: 1px solid rgba(26,24,20,0.15); color: var(--ink3); padding: 14px 18px; border-radius: 3px; font-family: var(--sans); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .btn-back-sm:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* PAYWALL */
+  .paywall-top { text-align: center; margin-bottom: 36px; }
+  .paywall-top .pw-eye { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .paywall-top .pw-eye::before { content: ''; width: 16px; height: 1px; background: var(--accent); display: block; }
+  .paywall-top .pw-eye::after { content: ''; width: 16px; height: 1px; background: var(--accent); display: block; }
+  .paywall-h { font-family: var(--serif); font-size: clamp(30px, 5vw, 46px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 10px; }
+  .paywall-h em { font-style: italic; color: var(--accent); }
+  .paywall-sub { font-size: 15px; color: var(--ink2); font-weight: 300; line-height: 1.7; }
+  .profile-summary { background: var(--white); border: 1px solid rgba(26,24,20,0.1); border-radius: 4px; padding: 20px 24px; margin-bottom: 24px; }
+  .ps-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink3); margin-bottom: 12px; }
+  .ps-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ps-row:last-child { margin-bottom: 0; }
+  .ps-key { font-size: 12px; color: var(--ink3); min-width: 72px; font-weight: 400; padding-top: 3px; }
+  .ps-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ps-tag { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--paper2); color: var(--ink2); font-weight: 400; }
+  .pw-box { background: var(--ink); border-radius: 6px; padding: 28px; }
+  .pw-box-eye { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 10px; }
+  .pw-box-h { font-family: var(--serif); font-size: 22px; color: var(--white); margin-bottom: 8px; line-height: 1.2; }
+  .pw-box-sub { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 300; line-height: 1.7; margin-bottom: 20px; }
+  .pw-items { margin-bottom: 24px; }
+  .pw-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 300; line-height: 1.5; }
+  .pw-item:last-child { border-bottom: none; }
+  .pw-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; margin-top: 6px; }
+  .pw-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn-pay { flex: 1; background: var(--accent); color: var(--white); border: none; padding: 15px 24px; border-radius: 3px; font-family: var(--sans); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .btn-pay:hover { background: #a83309; }
+  .pw-price { font-size: 22px; font-family: var(--serif); color: var(--white); white-space: nowrap; }
+  .pw-price span { font-size: 13px; font-family: var(--sans); color: rgba(255,255,255,0.4); font-weight: 300; }
+
+  @media (max-width: 600px) {
+    .diff-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 48px 20px 72px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Type<em>cast</em></div>
+  <span class="nav-step" id="nav-step"></span>
+</nav>
+
+<!-- PAGE: INTRO -->
+<div class="page active" id="page-intro">
+  <div class="wrap">
+    <div class="eyebrow">Cognitive Function Assessment</div>
+    <h1 class="page-h">คุณไม่ได้เป็นแบบที่<br>ตัวเอง<em>คิดว่า</em>เป็น</h1>
+    <div class="problem-box">
+      <p>ถ้าเคยทำ MBTI แล้วได้ผล<strong>ไม่เหมือนเดิมทุกครั้ง</strong> — ไม่ใช่เพราะคุณเปลี่ยน แต่เพราะแบบทดสอบ<span class="hl">บอกใบ้คำตอบ</span>ตลอดเวลา</p>
+      <p>พอเห็นว่าข้อนี้ถาม Introvert หรือ Extrovert เราก็ตอบตาม "ภาพที่อยากเป็น" โดยไม่รู้ตัว</p>
+    </div>
+    <div class="diff-grid">
+      <div class="diff-card diff-old">
+        <div class="diff-lbl">แบบทดสอบทั่วไป</div>
+        "คุณชอบอยู่คนเดียวหรืออยู่กับคน?" — รู้ทันทีว่าถาม I หรือ E แล้วตอบตามที่อยากเป็น
+      </div>
+      <div class="diff-card diff-new">
+        <div class="diff-lbl">Typecast</div>
+        เห็นสถานการณ์จริงก่อน นึกในใจ แล้วค่อยเลือก — ก่อนที่จะรู้ว่ากำลังวัดอะไร
+      </div>
+    </div>
+    <button class="btn-primary" onclick="goQuiz()">วัดผลตอนนี้เลย — 10 ข้อ</button>
+    <p class="btn-note">ใช้เวลาประมาณ 5 นาที · ไม่ต้องสมัครสมาชิก · ฟรี</p>
+  </div>
+</div>
+
+<!-- PAGE: QUIZ -->
+<div class="page" id="page-quiz">
+  <div class="wrap">
+    <div class="progress-header">
+      <span class="progress-label" id="q-label">ข้อ 1 / 10</span>
+      <span class="progress-label" id="q-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="q-bar" style="width:0%"></div></div>
+    <div id="q-block"></div>
+  </div>
+</div>
+
+<!-- PAGE: TYPE RESULT -->
+<div class="page" id="page-type">
+  <div class="wrap">
+    <div class="eyebrow">ผลลัพธ์ของคุณ</div>
+    <div class="type-reveal">
+      <div class="type-big" id="r-type">ENTJ</div>
+      <div class="type-name-en" id="r-name">The Commander</div>
+      <div class="func-chips" id="r-chips"></div>
+      <div class="stack-lbl">Dominant · Auxiliary · Tertiary · Inferior</div>
+    </div>
+    <div class="bars" id="r-bars"></div>
+    <div class="transition-box">
+      <div class="tb-eye">ขั้นต่อไป</div>
+      <div class="tb-h">รู้ว่าคุณเป็น <span id="tb-type">ENTJ</span> — แต่<br>งานแบบไหนที่ใช่สำหรับ<em style="font-style:italic;color:var(--accent2)">คุณ</em>จริงๆ?</div>
+      <div class="tb-sub">MBTI บอกว่าสมองทำงานแบบไหน แต่ยังไม่รู้ว่างานไหน fit กับ skills, ค่านิยม และ energy ของคุณโดยเฉพาะ ตอบเพิ่ม 3 ด้านสั้นๆ เพื่อให้ผลแม่นขึ้น</div>
+      <button class="btn-continue" onclick="goAssess()">ต่อเลย — ใช้เวลา 2 นาที</button>
+
+      <div class="qa-box">
+        <div class="qa-q" onclick="toggleQa(this)">
+          <span>ถ้าลำดับการใช้ cognitive function เราไม่ตาม archetype ล่ะ แบบประเมินนี้ยังวิเคราะห์เราตรงอยู่มั้ย?</span>
+          <svg class="qa-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="qa-a">เป็นคำถามที่ดีมาก คำตอบคือ <strong style="color:rgba(255,255,255,0.9);">ตรง</strong> เพราะเราวิเคราะห์จาก cognitive function โดยตรง ซึ่งคือวิถีความคิดจริงๆ ของคุณ — นั่นสำคัญกว่าชื่อ MBTI เสียอีก</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: DEEP ASSESSMENT -->
+<div class="page" id="page-assess">
+  <div class="wrap">
+    <div class="progress-header">
+      <span class="progress-label" id="a-label">ด้านที่ 1 / 3</span>
+      <span class="progress-label" id="a-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="a-bar" style="width:0%"></div></div>
+
+    <!-- STEP 1: SKILLS -->
+    <div class="assess-step active" id="step-skills">
+      <div class="assess-eyebrow">ด้านที่ 1 — Skills</div>
+      <h2 class="assess-h">อะไรที่คุณทำแล้ว<em style="font-style:italic;color:var(--accent)">ได้ผลดี</em>จริงๆ?</h2>
+      <p class="assess-sub">ไม่ต้องชอบ แต่ทำแล้วคนอื่นมักบอกว่าดี หรือรู้สึกว่าทำออกมาได้ดีกว่าคนส่วนใหญ่</p>
+      <div class="assess-why">ทำไมถึงถาม — skills ช่วยบอกว่าคุณ execute ได้จริงในด้านไหน ซึ่งต่างจากสิ่งที่แค่ "น่าสนใจ"</div>
+      <div class="checkbox-grid" id="skills-grid"></div>
+      <div class="cb-custom">
+        <input class="custom-input" id="skills-custom" type="text" placeholder="เพิ่มเองได้ เช่น เขียน, ออกแบบ, สอน...">
+      </div>
+      <br>
+      <div class="assess-nav">
+        <button class="btn-back-sm" onclick="showPage('page-type')">← กลับ</button>
+        <button class="btn-next" onclick="nextAssess(1)">ถัดไป →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: VALUES -->
+    <div class="assess-step" id="step-values">
+      <div class="assess-eyebrow">ด้านที่ 2 — Values</div>
+      <h2 class="assess-h">อะไรที่<em style="font-style:italic;color:var(--accent)">สำคัญ</em>กับคุณในการทำงาน?</h2>
+      <p class="assess-sub">ถ้าขาดสิ่งนี้ไปจะรู้สึกว่างาน "ไม่ใช่" แม้เงินดีหรือตำแหน่งดีก็ตาม</p>
+      <div class="assess-why">ทำไมถึงถาม — values บอกว่าคุณจะ thrive หรือ drain กับสภาพแวดล้อมแบบไหน และบางครั้งก็ขัดแย้งกันจนน่าสนใจ</div>
+      <div class="checkbox-grid" id="values-grid"></div>
+      <div class="cb-custom">
+        <input class="custom-input" id="values-custom" type="text" placeholder="เพิ่มเองได้ เช่น ครอบครัว, ความยุติธรรม...">
+      </div>
+      <br>
+      <div class="assess-nav">
+        <button class="btn-back-sm" onclick="prevAssess()">← กลับ</button>
+        <button class="btn-next" onclick="nextAssess(2)">ถัดไป →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: ENERGY -->
+    <div class="assess-step" id="step-energy">
+      <div class="assess-eyebrow">ด้านที่ 3 — Energy</div>
+      <h2 class="assess-h">งานแบบไหนที่ทำแล้ว<em style="font-style:italic;color:var(--accent)">ไม่หมดแรง</em>?</h2>
+      <p class="assess-sub">แม้จะเหนื่อยแต่รู้สึกว่า "คุ้ม" — ต่างจาก passion ที่บางทีทำแล้วก็ drain</p>
+      <div class="assess-why">ทำไมถึงถาม — energy บอกว่าสมองและร่างกายคุณรับได้แบบไหนในระยะยาว ซึ่งสำคัญกว่า passion ในหลายกรณี</div>
+      <div class="checkbox-grid" id="energy-grid"></div>
+      <div class="cb-custom">
+        <input class="custom-input" id="energy-custom" type="text" placeholder="เพิ่มเองได้ เช่น งานคนเดียว, งานกลางแจ้ง...">
+      </div>
+      <br>
+      <div class="assess-nav">
+        <button class="btn-back-sm" onclick="prevAssess()">← กลับ</button>
+        <button class="btn-next" onclick="goPaywall()">ดูผลลัพธ์ →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAGE: PAYWALL -->
+<div class="page" id="page-paywall">
+  <div class="wrap">
+    <div class="paywall-top">
+      <div class="pw-eye">ผลลัพธ์พร้อมแล้ว</div>
+      <h2 class="paywall-h">เราได้ภาพคุณ<br><em>ครบ 4 ด้าน</em>แล้ว</h2>
+      <p class="paywall-sub">รวม cognitive function + skills + values + energy — พร้อมสร้าง career map ที่ตรงกับคุณ ไม่ใช่ตรงกับ type</p>
+    </div>
+
+    <div class="profile-summary">
+      <div class="ps-label">โปรไฟล์ของคุณ</div>
+      <div class="ps-row">
+        <span class="ps-key">Type</span>
+        <div class="ps-tags"><span class="ps-tag" id="ps-type" style="background:var(--ink);color:var(--white)">ENTJ</span></div>
+      </div>
+      <div class="ps-row">
+        <span class="ps-key">Skills</span>
+        <div class="ps-tags" id="ps-skills"></div>
+      </div>
+      <div class="ps-row">
+        <span class="ps-key">Values</span>
+        <div class="ps-tags" id="ps-values"></div>
+      </div>
+      <div class="ps-row">
+        <span class="ps-key">Energy</span>
+        <div class="ps-tags" id="ps-energy"></div>
+      </div>
+    </div>
+
+    <div class="pw-box">
+      <div class="pw-box-eye">Depth Report</div>
+      <div class="pw-box-h">รับ career map<br>ที่ตรงกับคุณโดยเฉพาะ</div>
+      <div class="pw-box-sub">ไม่ใช่ "<span id="pw-type-label">ENTJ</span> เหมาะกับอะไร" แต่คือ "คุณ — ที่มี skills, values, energy แบบนี้ — เหมาะกับอะไร"</div>
+      <div class="pw-items">
+        <div class="pw-item"><div class="pw-dot"></div><div>Career map 3 อันดับที่ fit กับโปรไฟล์ของคุณ พร้อมเหตุผล</div></div>
+        <div class="pw-item"><div class="pw-dot"></div><div>สภาพแวดล้อมที่ทำงานได้ดีที่สุด vs drain ที่สุด</div></div>
+        <div class="pw-item"><div class="pw-dot"></div><div>Function ที่ควร develop + วิธีทำแบบ practical</div></div>
+        <div class="pw-item"><div class="pw-dot"></div><div>Trap ที่มักเจอและวิธีสังเกตก่อนที่มันจะเกิด</div></div>
+        <div class="pw-item"><div class="pw-dot"></div><div>PDF รายงานส่วนตัว บันทึกและแชร์ได้</div></div>
+      </div>
+      <div class="pw-actions">
+        <button class="btn-pay" onclick="goPay()">รับรายงานตอนนี้</button>
+        <span class="pw-price">99 <span>บาท</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const questions = [
+  { text:"มีประชุมใหญ่วันพรุ่งนี้ที่ไม่ได้เตรียมไว้ คุณ...", a:{text:"หาข้อมูลคร่าวๆ แล้วเชื่อว่าจะปรับได้ในห้องประชุม",funcs:["Se"]}, b:{text:"ขอดูวาระก่อน อยากรู้ว่าต้องเตรียมอะไรบ้าง",funcs:["Si"]} },
+  { text:"หัวหน้าให้ทำรีพอร์ตโดยไม่บอก format คุณ...", a:{text:"ลองดูว่า format ไหนสื่อสารได้ดีที่สุด",funcs:["Ne","Te"]}, b:{text:"ขอดูตัวอย่างเก่าก่อน เอาแบบที่คนคุ้นเคย",funcs:["Si"]} },
+  { text:"เพื่อนร่วมงานทำงานผิดพลาดจนกระทบทีม คุณ...", a:{text:"พูดตรงๆ ว่าเกิดอะไรขึ้นและควรแก้ยังไง",funcs:["Te","Ti"]}, b:{text:"หาจังหวะคุยส่วนตัว ระวังไม่ให้เขาเสียหน้า",funcs:["Fe"]} },
+  { text:"งานในมือเยอะมาก คุณจัดการยังไง?", a:{text:"ลิสต์แล้ว prioritize ตาม deadline",funcs:["Te"]}, b:{text:"เริ่มจากอันที่รู้สึกว่าสำคัญสุดโดยสัญชาตญาณ",funcs:["Ni","Fi"]} },
+  { text:"ในห้องประชุม เมื่อไหร่ที่คุณพูดขึ้นมาเอง?", a:{text:"ตอนมีไอเดียใหม่ที่อยากแชร์ทันที",funcs:["Ne","Se"]}, b:{text:"ตอนที่ฟังครบแล้วและมั่นใจว่ามีน้ำหนัก",funcs:["Ti","Ni"]} },
+  { text:"โปรเจกต์ใกล้ deadline แต่มีไอเดียใหม่โผล่ขึ้นมา คุณ...", a:{text:"โน้ตไว้ก่อน ทำให้เสร็จตามแผนเดิม",funcs:["Si","Te"]}, b:{text:"ลองดูว่าใส่ได้ไหม ถ้าดีกว่าควรเปลี่ยน",funcs:["Ne"]} },
+  { text:"หลังประชุมที่เครียดมาก คุณรู้สึกอยากทำอะไร?", a:{text:"ออกไปเดินหรือเปลี่ยนบรรยากาศคนเดียวก่อน",funcs:["Fi","Si"]}, b:{text:"ระบายกับเพื่อนสนิท รู้สึกดีขึ้นเมื่อได้คุย",funcs:["Fe"]} },
+  { text:"มีคนในทีมทำงานช้าแต่ไม่ยอมบอกว่าติดปัญหาอะไร คุณ...", a:{text:"ถามตรงๆ ว่าติดอะไร ต้องการความช่วยเหลือไหม",funcs:["Te"]}, b:{text:"สังเกตพฤติกรรมก่อน แล้วค่อยเข้าใจว่าเกิดอะไรขึ้น",funcs:["Ni","Fi"]} },
+  { text:"ได้รับ feedback ที่ไม่เห็นด้วย คุณ...", a:{text:"ฟังก่อน แต่ถ้าไม่สมเหตุสมผลก็จะโต้แย้ง",funcs:["Ti","Te"]}, b:{text:"รับไว้ก่อน แล้วค่อยไปคิดคนเดียวว่าจริงไหม",funcs:["Fi","Ni"]} },
+  { text:"วันที่งานเบาและไม่มีประชุม คุณมักทำอะไร?", a:{text:"จัดระเบียบงานค้าง วางแผนสิ่งที่ต้องทำต่อ",funcs:["Si","Te"]}, b:{text:"ใช้เวลาคิดไอเดียใหม่หรืออ่านสิ่งที่สนใจ",funcs:["Ne","Ni"]} }
+];
+
+const skillsOptions = ["วางแผน / จัดระบบ","แก้ปัญหาเฉพาะหน้า","วิเคราะห์ข้อมูล","โน้มน้าว / พูดนำเสนอ","บริหารคน / ทีม","สอน / อธิบาย","สร้างสรรค์ / ออกแบบ","เขียน / สื่อสาร"];
+const valuesOptions = ["อิสระในการตัดสินใจ","เห็นผลกระทบชัดเจน","เติบโตและเรียนรู้ตลอด","ความมั่นคง","ทำงานกับคนเก่งๆ","สร้างสิ่งใหม่","ช่วยเหลือคนอื่น","ได้รับการยอมรับ"];
+const energyOptions = ["งานที่มีโจทย์ซับซ้อน","งานที่เห็นผลเร็ว","งานที่ได้คุยและโน้มน้าวคน","งานที่ได้ออกแบบระบบ","งานที่ได้สอนหรือพัฒนาคน","งานที่ได้คิดคนเดียวลึกๆ","งานที่ได้ทำซ้ำจนเชี่ยวชาญ","งานที่ได้สร้างจากศูนย์"];
+
+const mbtiStacks = {
+  INTJ:["Ni","Te","Fi","Se"],INTP:["Ti","Ne","Si","Fe"],ENTJ:["Te","Ni","Se","Fi"],ENTP:["Ne","Ti","Fe","Si"],
+  INFJ:["Ni","Fe","Ti","Se"],INFP:["Fi","Ne","Si","Te"],ENFJ:["Fe","Ni","Se","Ti"],ENFP:["Ne","Fi","Te","Si"],
+  ISTJ:["Si","Te","Fi","Ne"],ISFJ:["Si","Fe","Ti","Ne"],ESTJ:["Te","Si","Ne","Fi"],ESFJ:["Fe","Si","Ne","Ti"],
+  ISTP:["Ti","Se","Ni","Fe"],ISFP:["Fi","Se","Ni","Te"],ESTP:["Se","Ti","Fe","Ni"],ESFP:["Se","Fi","Te","Ni"]
+};
+const mbtiNames = {
+  INTJ:"The Architect",INTP:"The Logician",ENTJ:"The Commander",ENTP:"The Debater",
+  INFJ:"The Advocate",INFP:"The Mediator",ENFJ:"The Protagonist",ENFP:"The Campaigner",
+  ISTJ:"The Logistician",ISFJ:"The Defender",ESTJ:"The Executive",ESFJ:"The Consul",
+  ISTP:"The Virtuoso",ISFP:"The Adventurer",ESTP:"The Entrepreneur",ESFP:"The Entertainer"
+};
+const allFuncs = ["Ne","Ni","Se","Si","Te","Ti","Fe","Fi"];
+
+// ── STATE ──
+let qCurrent = 0;
+let scores = {};
+allFuncs.forEach(f => scores[f]=0);
+let bestType = 'ENTJ';
+let assessStep = 0; // 0=skills,1=values,2=energy
+let selections = {skills:[],values:[],energy:[]};
+
+// ── HELPERS ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function setNavStep(txt) {
+  document.getElementById('nav-step').textContent = txt;
+}
+
+// ── QUIZ ──
+function goQuiz() {
+  qCurrent = 0;
+  allFuncs.forEach(f => scores[f]=0);
+  showPage('page-quiz');
+  setNavStep('แบบทดสอบ 1/10');
+  renderQ();
+}
+
+function renderQ(revealed=false) {
+  const q = questions[qCurrent];
+  const pct = Math.round((qCurrent/questions.length)*100);
+  document.getElementById('q-label').textContent = `ข้อ ${qCurrent+1} / ${questions.length}`;
+  document.getElementById('q-pct').textContent = pct+'%';
+  document.getElementById('q-bar').style.width = pct+'%';
+  setNavStep(`แบบทดสอบ ${qCurrent+1}/10`);
+  document.getElementById('q-block').innerHTML = `
+    <div class="q-num">ข้อ ${qCurrent+1}</div>
+    <div class="q-text">${q.text}</div>
+    ${!revealed ? `
+      <div class="think-hint"><span>💭</span>นึกในใจก่อนว่าตัวเองจะทำอะไร</div>
+      <button class="btn-reveal" onclick="renderQ(true)">ดูตัวเลือก</button>
+    ` : `
+      <div class="choices">
+        <button class="choice-btn" onclick="choose('a')"><span class="choice-lbl">ก</span>${q.a.text}</button>
+        <button class="choice-btn" onclick="choose('b')"><span class="choice-lbl">ข</span>${q.b.text}</button>
+      </div>
+    `}
+  `;
+}
+
+function choose(c) {
+  questions[qCurrent][c].funcs.forEach(f => scores[f]++);
+  qCurrent++;
+  if (qCurrent < questions.length) { renderQ(false); }
+  else { showTypeResult(); }
+}
+
+// ── TYPE RESULT ──
+function showTypeResult() {
+  let best=null, bestSc=-1;
+  for (const [type,stack] of Object.entries(mbtiStacks)) {
+    const w=[4,3,2,1];
+    let s = stack.reduce((acc,fn,i) => acc+(scores[fn]||0)*w[i], 0);
+    if (s>bestSc) { bestSc=s; best=type; }
+  }
+  bestType = best;
+  const stack = mbtiStacks[best];
+  document.getElementById('r-type').textContent = best;
+  document.getElementById('r-name').textContent = mbtiNames[best];
+  document.getElementById('tb-type').textContent = best;
+  const chipCls = ['fdom','faux','fter','finf'];
+  const chipLbl = ['Dom','Aux','Ter','Inf'];
+  document.getElementById('r-chips').innerHTML = stack.map((f,i) =>
+    `<span class="fchip ${chipCls[i]}">${f}<span style="font-size:10px;opacity:0.55;margin-left:3px">${chipLbl[i]}</span></span>`
+  ).join('');
+  const maxSc = Math.max(...allFuncs.map(f=>scores[f]),1);
+  document.getElementById('r-bars').innerHTML = allFuncs.map(f => {
+    const pct = Math.round((scores[f]/maxSc)*100);
+    const on = stack.includes(f);
+    return `<div class="bar-row">
+      <div class="bar-name">${f}</div>
+      <div class="bar-track"><div class="bar-fill ${on?'bar-on':'bar-off'}" style="width:0%" data-pct="${pct}"></div></div>
+      <div class="bar-sc">${scores[f]}</div>
+    </div>`;
+  }).join('');
+  showPage('page-type');
+  setNavStep('ผลลัพธ์');
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => el.style.width = el.dataset.pct+'%');
+  }, 120);
+}
+
+// ── ASSESSMENT ──
+function buildCheckboxes(containerId, options, category) {
+  document.getElementById(containerId).innerHTML = options.map((opt,i) => `
+    <label class="cb-item" id="cb-${category}-${i}" onclick="toggleCb('${category}',${i},'${opt}')">
+      <div class="cb-box">
+        <svg class="cb-check" width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="cb-text">${opt}</span>
+    </label>
+  `).join('');
+}
+
+function toggleCb(cat, idx, val) {
+  const el = document.getElementById(`cb-${cat}-${idx}`);
+  const already = selections[cat].includes(val);
+  if (already) {
+    selections[cat] = selections[cat].filter(v => v!==val);
+    el.classList.remove('checked');
+  } else {
+    selections[cat].push(val);
+    el.classList.add('checked');
+  }
+}
+
+function goAssess() {
+  buildCheckboxes('skills-grid', skillsOptions, 'skills');
+  buildCheckboxes('values-grid', valuesOptions, 'values');
+  buildCheckboxes('energy-grid', energyOptions, 'energy');
+  assessStep = 0;
+  showAssessStep(0);
+  showPage('page-assess');
+  setNavStep('ด้านที่ 1/3');
+}
+
+function showAssessStep(idx) {
+  document.querySelectorAll('.assess-step').forEach(s => s.classList.remove('active'));
+  const steps = ['step-skills','step-values','step-energy'];
+  document.getElementById(steps[idx]).classList.add('active');
+  const pct = Math.round((idx/3)*100);
+  document.getElementById('a-label').textContent = `ด้านที่ ${idx+1} / 3`;
+  document.getElementById('a-pct').textContent = pct+'%';
+  document.getElementById('a-bar').style.width = pct+'%';
+  setNavStep(`ด้านที่ ${idx+1}/3`);
+  window.scrollTo(0,0);
+}
+
+function nextAssess(fromStep) {
+  // เก็บ custom input
+  const cats = ['skills','values','energy'];
+  const customEl = document.getElementById(`${cats[fromStep-1]}-custom`);
+  if (customEl && customEl.value.trim()) {
+    selections[cats[fromStep-1]].push(customEl.value.trim());
+  }
+  assessStep = fromStep;
+  showAssessStep(fromStep);
+}
+
+function prevAssess() {
+  assessStep = Math.max(0, assessStep-1);
+  showAssessStep(assessStep);
+}
+
+function toggleQa(el) {
+  const ans = el.nextElementSibling;
+  const arrow = el.querySelector('.qa-arrow');
+  const open = ans.style.display === 'block';
+  ans.style.display = open ? 'none' : 'block';
+  arrow.classList.toggle('open', !open);
+}
+
+function goPaywall() {
+  // เก็บ energy custom
+  const customEl = document.getElementById('energy-custom');
+  if (customEl && customEl.value.trim()) {
+    selections.energy.push(customEl.value.trim());
+  }
+  // แสดง profile summary
+  document.getElementById('ps-type').textContent = bestType;
+  document.getElementById('pw-type-label').textContent = bestType;
+  const cats = ['skills','values','energy'];
+  cats.forEach(cat => {
+    const el = document.getElementById(`ps-${cat}`);
+    const items = selections[cat].length ? selections[cat] : ['(ไม่ได้เลือก)'];
+    el.innerHTML = items.slice(0,4).map(v => `<span class="ps-tag">${v}</span>`).join('');
+  });
+  showPage('page-paywall');
+  setNavStep('ผลลัพธ์ครบ 4 ด้าน');
+  document.getElementById('a-bar').style.width = '100%';
+  document.getElementById('a-pct').textContent = '100%';
+}
+
+function goPay() {
+  const s = encodeURIComponent(sel.skills.join(','));
+  const v = encodeURIComponent(sel.values.join(','));
+  const en = encodeURIComponent(sel.energy.join(','));
+  window.location.href = `typecast-checkout.html?type=${encodeURIComponent(bestType)}&skills=${s}&values=${v}&energy=${en}`;
+}
+</script>
+</body>
+</html>
